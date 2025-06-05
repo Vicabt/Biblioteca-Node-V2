@@ -6,6 +6,7 @@ import AuthorForm from '../components/authors/AuthorForm';
 import Button from '../components/common/Button';
 import useApi from '../hooks/useApi';
 import apiService from '../services/api';
+import Pagination from '../components/common/Pagination';
 
 // Component for editing an author
 const EditAuthor = () => {
@@ -111,9 +112,56 @@ const NewAuthor = () => {
 
 // Main Authors Page that manages routing
 const AuthorsPage = () => {
+  const AUTHORS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [authors, setAuthors] = useState([]);
+
+  const { execute: fetchAuthors } = useApi(apiService.getAuthors);
+
+  useEffect(() => {
+    const loadAuthors = async () => {
+      try {
+        const data = await fetchAuthors();
+        setAuthors(data);
+      } catch (err) {
+        console.error('Error al cargar la lista de autores:', err);
+      }
+    };
+    
+    loadAuthors();
+  }, [fetchAuthors]);
+
+  // Calcular autores a mostrar según la página
+  const paginatedAuthors = authors.slice((currentPage - 1) * AUTHORS_PER_PAGE, currentPage * AUTHORS_PER_PAGE);
+  const totalPages = Math.ceil(authors.length / AUTHORS_PER_PAGE);
+
   return (
     <Routes>
-      <Route index element={<AuthorList />} />
+      <Route index element={
+        <div>
+          <div className="mb-6 flex items-center">
+            <Button 
+              variant="outline" 
+              className="mr-4"
+              onClick={() => navigate('/authors')}
+            >
+              <HiArrowLeft className="w-5 h-5 mr-2" />
+              Volver
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-900">Lista de Autores</h1>
+          </div>
+          {Array.isArray(authors) && paginatedAuthors.length > 0 ? (
+            <AuthorList authors={paginatedAuthors} />
+          ) : (
+            <p>No se encontraron autores.</p>
+          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      } />
       <Route path="new" element={<NewAuthor />} />
       <Route path=":id/edit" element={<EditAuthor />} />
     </Routes>

@@ -2,11 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 import Button from '../components/common/Button';
 import toast from 'react-hot-toast'; // Import toast
+import Pagination from '../components/common/Pagination';
 
 const InactiveBooksPage = ({ user }) => {
   const [inactiveBooks, setInactiveBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const INACTIVE_BOOKS_PER_PAGE = 10;
 
   const fetchInactiveBooks = useCallback(async () => {
     setLoading(true);
@@ -52,6 +56,9 @@ const InactiveBooksPage = ({ user }) => {
     return <p className="text-red-500">{error}</p>;
   }
 
+  const paginatedBooks = inactiveBooks.slice((currentPage - 1) * INACTIVE_BOOKS_PER_PAGE, currentPage * INACTIVE_BOOKS_PER_PAGE);
+  const totalPages = Math.ceil(inactiveBooks.length / INACTIVE_BOOKS_PER_PAGE);
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Libros Inactivos</h1>
@@ -69,7 +76,7 @@ const InactiveBooksPage = ({ user }) => {
               </tr>
             </thead>
             <tbody>
-              {inactiveBooks.map((book) => (
+              {paginatedBooks.map((book) => (
                 <tr key={book.id} className="hover:bg-gray-50">
                   <td className="py-2 px-4 border-b">{book.title}</td>
                   <td className="py-2 px-4 border-b">{book.author?.name || 'N/A'}</td>
@@ -88,6 +95,11 @@ const InactiveBooksPage = ({ user }) => {
           </table>
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

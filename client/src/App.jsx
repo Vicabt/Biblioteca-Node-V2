@@ -22,6 +22,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import BookDetailPage from './pages/BookDetailPage';
 import UsersAdminPage from './pages/UsersAdminPage';
 import InactiveBooksPage from './pages/InactiveBooksPage'; // Import InactiveBooksPage
+import ReportsPage from './pages/ReportsPage';
 
 // Components
 import BookForm from './components/books/BookForm';
@@ -108,6 +109,7 @@ const App = () => {
         { path: 'profile', element: <UserProfilePage /> },
         { path: 'users-admin', element: user?.role === 'Administrador' ? <UsersAdminPage /> : <Navigate to="/" /> },
         { path: 'admin/inactive-books', element: user?.role === 'Administrador' ? <InactiveBooksPage user={user} /> : <Navigate to="/" /> }, // Pass user prop
+        { path: 'reportes', element: user?.role === 'Administrador' ? <ReportsPage /> : <Navigate to="/" /> },
       ]
     },
     {

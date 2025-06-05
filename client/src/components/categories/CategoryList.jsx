@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiPencil, 
@@ -13,16 +13,8 @@ import useApi from '../../hooks/useApi';
 import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
-const CategoryList = () => {
-  const [categories, setCategories] = useState([]);
+const CategoryList = ({ categories = [], onChange }) => {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, category: null });
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const {
-    loading: loadingCategories,
-    error: categoriesError,
-    execute: fetchCategories
-  } = useApi(apiService.getCategories);
   
   const {
     loading: loadingDelete,
@@ -39,27 +31,10 @@ const CategoryList = () => {
     showSuccessToast: true
   });
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      setIsLoading(true);
-      const result = await fetchCategories();
-      setCategories(Array.isArray(result) ? result : []);
-    } catch (err) {
-      console.error('Error loading categories:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleToggleState = async (id) => {
     try {
       await executeToggle(id);
-      // Actualizar la lista después de cambiar el estado
-      loadCategories();
+      if (onChange) onChange();
     } catch (err) {
       console.error('Error toggling category state:', err);
     }
@@ -75,32 +50,14 @@ const CategoryList = () => {
 
   const handleDelete = async () => {
     if (!deleteModal.category) return;
-    
     try {
       await executeDelete(deleteModal.category.id);
-      // Actualizar la lista después de eliminar
-      loadCategories();
+      if (onChange) onChange();
       closeDeleteModal();
     } catch (err) {
       console.error('Error deleting category:', err);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  if (categoriesError) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        Error cargando categorías: {categoriesError}
-      </div>
-    );
-  }
 
   return (
     <div>

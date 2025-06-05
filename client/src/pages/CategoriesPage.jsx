@@ -6,6 +6,7 @@ import CategoryForm from '../components/categories/CategoryForm';
 import Button from '../components/common/Button';
 import useApi from '../hooks/useApi';
 import apiService from '../services/api';
+import Pagination from '../components/common/Pagination';
 
 // Component for editing a category
 const EditCategory = () => {
@@ -111,9 +112,34 @@ const NewCategory = () => {
 
 // Main Categories Page that manages routing
 const CategoriesPage = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const CATEGORIES_PER_PAGE = 10;
+  const [categories, setCategories] = useState([]);
+
+  const { execute: fetchCategories } = useApi(apiService.getCategories);
+
+  const loadCategories = async () => {
+    try {
+      const data = await fetchCategories();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error al cargar las categorías:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, [fetchCategories]);
+
+  // Calcular categorías a mostrar según la página
+  const paginatedCategories = categories.slice((currentPage - 1) * CATEGORIES_PER_PAGE, currentPage * CATEGORIES_PER_PAGE);
+  const totalPages = Math.ceil(categories.length / CATEGORIES_PER_PAGE);
+
   return (
     <Routes>
-      <Route index element={<CategoryList />} />
+      <Route index element={
+        <CategoryList categories={paginatedCategories} onChange={loadCategories} />
+      } />
       <Route path="new" element={<NewCategory />} />
       <Route path=":id/edit" element={<EditCategory />} />
     </Routes>

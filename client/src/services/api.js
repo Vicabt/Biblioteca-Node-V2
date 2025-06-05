@@ -310,6 +310,18 @@ const apiService = {
   deleteCopy: async (id) => {
     const response = await api.delete(`/copies/${id}`); // Changed to DELETE
     return response.data;
+  },
+
+  // Verificar estado de paz y salvo de un usuario
+  checkUserStatus: async (userId) => {
+    const response = await api.get(`/loans/check-user-status/${userId}`);
+    return response.data.data;
+  },
+
+  // Obtener préstamos de un usuario por su ID
+  getLoansByUser: async (userId) => {
+    const response = await api.get(`/loans?user_id=${userId}`);
+    return response.data.data;
   }
 };
 

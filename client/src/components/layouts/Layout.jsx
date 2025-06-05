@@ -10,7 +10,8 @@ import {
   HiLogout,
   HiBookmark,
   HiClipboardList, // Añadir ícono para préstamos
-  HiArchive // Icon for inactive books
+  HiArchive, // Icon for inactive books
+  HiDocumentReport
 } from 'react-icons/hi';
 import { HiBuildingLibrary } from 'react-icons/hi2';
 
@@ -32,6 +33,7 @@ const Layout = ({ user, onLogout }) => {
       { name: 'Préstamos', path: '/loans', icon: HiClipboardList },
       { name: 'Usuarios', path: '/users-admin', icon: HiUsers },
       { name: 'Libros Inactivos', path: '/admin/inactive-books', icon: HiArchive },
+      { name: 'Reportes', path: '/reportes', icon: HiDocumentReport },
     ];
   }
 

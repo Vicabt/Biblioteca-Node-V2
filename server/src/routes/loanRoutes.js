@@ -23,4 +23,7 @@ router.get('/', authorizeRoles('Administrador', 'Bibliotecario'), loanController
 // Ruta para eliminar un préstamo
 router.delete('/:id', authorizeRoles('Administrador', 'Bibliotecario'), loanController.deleteLoan);
 
+// Ruta para verificar paz y salvo de un usuario (solo administradores)
+router.get('/check-user-status/:userId', authorizeRoles('Administrador'), loanController.checkUserStatus);
+
 module.exports = router;

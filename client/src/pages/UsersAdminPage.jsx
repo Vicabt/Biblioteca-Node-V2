@@ -5,12 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import UserModal from '../components/users/UserModal';
 import { Modal as AntdModal, Button as AntButton, Form, Input, message } from 'antd'; // Use AntdModal explicitly
+import Pagination from '../components/common/Pagination';
 
 const roleColors = {
   'Administrador': 'bg-red-100 text-red-800',
   'Bibliotecario': 'bg-blue-100 text-blue-800',
   'Usuario': 'bg-green-100 text-green-800',
 };
+
+const USERS_PER_PAGE = 10;
 
 const UsersAdminPage = () => {
   const [users, setUsers] = useState([]);
@@ -22,7 +25,7 @@ const UsersAdminPage = () => {
   const [selectedUserId, setSelectedUserId] = useState(null); // State for selected user ID for password reset
   const [form] = Form.useForm(); // For Add/Edit User form
   const [passwordForm] = Form.useForm(); // For Reset Password form
-  // const [modalLoading, setModalLoading] = useState(false); // Removed as it's not used consistently and causes errors
+  const [currentPage, setCurrentPage] = useState(1);
 
   const navigate = useNavigate();
 
@@ -123,6 +126,10 @@ const UsersAdminPage = () => {
     }
   };
 
+  // Calcular usuarios a mostrar según la página
+  const paginatedUsers = users.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE);
+  const totalPages = Math.ceil(users.length / USERS_PER_PAGE);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -149,7 +156,7 @@ const UsersAdminPage = () => {
               <tr><td colSpan={9} className="text-center py-8">Cargando...</td></tr>
             ) : users.length === 0 ? (
               <tr><td colSpan={9} className="text-center py-8 text-gray-500">No hay usuarios registrados</td></tr>
-            ) : Array.isArray(users) ? users.map(user => (
+            ) : Array.isArray(users) ? paginatedUsers.map(user => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.document_number}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.full_name || user.username}</td>
@@ -168,24 +175,38 @@ const UsersAdminPage = () => {
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <Button variant="info" onClick={() => handleEditUser(user)} className="me-2">
+                  <button
+                    onClick={() => handleEditUser(user)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors"
+                  >
                     Editar
-                  </Button>
-                  <Button variant="warning" onClick={() => handleOpenPasswordModal(user.id)} className="me-2"> {/* Corrected to user.id */}
+                  </button>
+                  <button
+                    onClick={() => handleOpenPasswordModal(user.id)}
+                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded transition-colors"
+                  >
                     Restablecer Contraseña
-                  </Button>
-                  <Button
-                    variant={user.active ? 'danger' : 'success'} // Using variant for styling consistency
+                  </button>
+                  <button
                     onClick={() => handleToggleActive(user)}
+                    className={user.active
+                      ? "bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors"
+                      : "bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors"
+                    }
                   >
                     {user.active ? 'Desactivar' : 'Activar'}
-                  </Button> {/* Corrected closing tag and added variant for consistency */}
+                  </button>
                 </td>
               </tr>
             )) : null}
           </tbody>
         </table>
       </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
       <UserModal
         open={isModalOpen} // Corrected prop name
         onClose={handleModalClose}

@@ -11,6 +11,7 @@ const HomePage = () => {
     categories: 0,
     publishers: 0,
     books: 0,
+    activeLoans: 0,
     total: 0
   });
   const [activities, setActivities] = useState([]);
@@ -22,6 +23,7 @@ const HomePage = () => {
   const { execute: fetchCategories } = useApi(apiService.getCategories);
   const { execute: fetchPublishers } = useApi(apiService.getPublishers);
   const { execute: fetchBooks } = useApi(apiService.getBooks);
+  const { execute: fetchLoans } = useApi(apiService.getLoans);
   const { execute: fetchActivitiesData, loading: loadingActivities, error: activitiesError } = useApi(apiService.getActivities);
 
   useEffect(() => {
@@ -29,39 +31,41 @@ const HomePage = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const [authors, categories, publishers, books] = await Promise.all([
+        const [authors, categories, publishers, books, loans] = await Promise.all([
           fetchAuthors(),
           fetchCategories(),
           fetchPublishers(),
-          fetchBooks()
+          fetchBooks(),
+          fetchLoans()
         ]);
-
+        const activeLoans = Array.isArray(loans)
+          ? loans.filter(l => l.status === 'aprobado' && !l.return_date).length
+          : 0;
         setStats({
           authors: authors?.length || 0,
           categories: categories?.length || 0,
           publishers: publishers?.length || 0,
           books: books?.length || 0,
+          activeLoans,
           total: (authors?.length || 0) + (categories?.length || 0) + (publishers?.length || 0) + (books?.length || 0)
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
         setError('Error al cargar las estadísticas');
-        // Mantener los valores en 0 en caso de error
         setStats({
           authors: 0,
           categories: 0,
           publishers: 0,
           books: 0,
+          activeLoans: 0,
           total: 0
         });
       } finally {
         setLoading(false);
       }
     };
-
     fetchStatsAndActivities();
-  }, [fetchAuthors, fetchCategories, fetchPublishers, fetchBooks, fetchActivitiesData]);
+  }, [fetchAuthors, fetchCategories, fetchPublishers, fetchBooks, fetchLoans, fetchActivitiesData]);
 
   // Separate useEffect for fetching activities to handle its own loading/error state if needed
   // or combine if logic is simple enough. For now, let's assume fetchActivitiesData updates 'activities' state via useApi.
@@ -126,7 +130,8 @@ const HomePage = () => {
     { id: 2, name: 'Categorías', value: stats.categories, icon: HiBookOpen, color: 'bg-purple-500', path: '/categories' },
     { id: 3, name: 'Editoriales', value: stats.publishers, icon: HiBuildingLibrary, color: 'bg-green-500', path: '/publishers' },
     { id: 4, name: 'Libros', value: stats.books, icon: HiBookmark, color: 'bg-yellow-500', path: '/books' },
-    { id: 5, name: 'Total registros', value: stats.total, icon: HiChartBar, color: 'bg-amber-500', path: '#' }
+    { id: 5, name: 'Préstamos Activos', value: stats.activeLoans, icon: HiBookmark, color: 'bg-cyan-500', path: '/loans' },
+    { id: 6, name: 'Total registros', value: stats.total, icon: HiChartBar, color: 'bg-amber-500', path: '#' }
   ];
 
   function formateaTiempo(fecha) {

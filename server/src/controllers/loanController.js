@@ -226,10 +226,41 @@ const deleteLoan = asyncHandler(async (req, res) => {
     sendSuccess(res, null, HTTP_STATUS.OK, 'Préstamo eliminado correctamente');
 });
 
+// Verificar estado de paz y salvo de un usuario
+const checkUserStatus = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  // Buscar préstamos activos o vencidos del usuario
+  const { data: loans, error } = await supabase
+    .from('loans')
+    .select('id, status, due_date')
+    .eq('user_id', userId);
+
+  if (error) {
+    return handleSupabaseError(res, error, 'Error al verificar préstamos del usuario');
+  }
+
+  // Préstamos activos (no devueltos ni cancelados)
+  const activeLoans = loans.filter(l => l.status !== 'devuelto' && l.status !== 'cancelado');
+  // Préstamos vencidos
+  const now = new Date();
+  const overdueLoans = activeLoans.filter(l => l.status !== 'devuelto' && new Date(l.due_date) < now);
+
+  res.status(200).json({
+    status: 200,
+    data: {
+      isInGoodStanding: overdueLoans.length === 0,
+      activeLoansCount: activeLoans.length
+    },
+    message: 'Estado de usuario consultado correctamente'
+  });
+});
+
 module.exports = {
     requestLoan,
     getUserLoans,
     getAllLoans,
     updateLoan, // Consolidated function replaces updateLoanStatus, updateLoan, and returnLoan
-    deleteLoan
+    deleteLoan,
+    checkUserStatus
 };

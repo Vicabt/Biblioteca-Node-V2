@@ -5,11 +5,13 @@ import Button from '../components/common/Button';
 import useApi from '../hooks/useApi';
 import apiService from '../services/api';
 import toast from 'react-hot-toast';
+import Pagination from '../components/common/Pagination';
 
 const BooksPage = ({ user }) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, book: null });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const {
     loading: loadingBooks,
@@ -52,6 +54,10 @@ const BooksPage = ({ user }) => {
       }
     }
   };
+
+  const BOOKS_PER_PAGE = 10;
+  const paginatedBooks = books.slice((currentPage - 1) * BOOKS_PER_PAGE, currentPage * BOOKS_PER_PAGE);
+  const totalPages = Math.ceil(books.length / BOOKS_PER_PAGE);
 
   if (loading) {
     return (
@@ -109,7 +115,7 @@ const BooksPage = ({ user }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {books.map((book) => (
+              {paginatedBooks.map(book => (
                 <tr key={book.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{book.title}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{book.author?.name}</td>
@@ -147,6 +153,11 @@ const BooksPage = ({ user }) => {
           </table>
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

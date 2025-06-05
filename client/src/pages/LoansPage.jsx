@@ -4,6 +4,7 @@ import LoanForm from '../components/loans/LoanForm';
 import apiService from '../services/api';
 import Modal from '../components/common/Modal';
 import Button from '../components/common/Button';
+import Pagination from '../components/common/Pagination';
 
 const LoansPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +15,7 @@ const LoansPage = () => {
   const [activeTab, setActiveTab] = useState('Todos');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -106,6 +108,10 @@ const LoansPage = () => {
   const activeTabStyle = "border-b-2 border-blue-500 text-blue-500";
   const inactiveTabStyle = "text-gray-500 hover:text-blue-500";
 
+  const LOANS_PER_PAGE = 10;
+  // Calcular préstamos a mostrar según la página
+  const paginatedLoans = filteredLoans.slice((currentPage - 1) * LOANS_PER_PAGE, currentPage * LOANS_PER_PAGE);
+  const totalPages = Math.ceil(filteredLoans.length / LOANS_PER_PAGE);
 
   return (
     <div className="container mx-auto p-4">
@@ -139,14 +145,21 @@ const LoansPage = () => {
       ) : error ? (
         <p className="text-center text-red-500 py-8">Error: {error}</p>
       ) : (
-        <LoanList
-          loans={filteredLoans}
-          onEditLoan={user?.role === 'admin' ? handleOpenModal : null}
-          onViewLoan={handleViewLoan} // Pass view handler to LoanList
-          onDeleteSuccess={fetchLoans} // To refresh list after delete
-          onApproveSuccess={fetchLoans} // To refresh list after approval
-          onReturnSuccess={fetchLoans} // To refresh list after return
-        />
+        <>
+          <LoanList
+            loans={paginatedLoans}
+            onEditLoan={user?.role === 'admin' ? handleOpenModal : null}
+            onViewLoan={handleViewLoan}
+            onDeleteSuccess={fetchLoans}
+            onApproveSuccess={fetchLoans}
+            onReturnSuccess={fetchLoans}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
 
       {isModalOpen && (
@@ -160,7 +173,6 @@ const LoansPage = () => {
               <p><strong>Fecha Préstamo:</strong> {new Date(viewingLoan.loan_date).toLocaleDateString()}</p>
               <p><strong>Fecha Devolución:</strong> {new Date(viewingLoan.due_date).toLocaleDateString()}</p>
               <p><strong>Estado:</strong> {viewingLoan.status}</p>
-              {viewingLoan.return_date && <p><strong>Fecha Retornado:</strong> {new Date(viewingLoan.return_date).toLocaleDateString()}</p>}
             </div>
           ) : (
             // LoanForm for creating/editing

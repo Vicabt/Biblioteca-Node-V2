@@ -6,6 +6,7 @@ import PublisherForm from '../components/publishers/PublisherForm';
 import Button from '../components/common/Button';
 import useApi from '../hooks/useApi';
 import apiService from '../services/api';
+import Pagination from '../components/common/Pagination';
 
 // Component for editing a publisher
 const EditPublisher = () => {
@@ -107,9 +108,56 @@ const NewPublisher = () => {
 
 // Main Publishers Page that manages routing
 const PublishersPage = () => {
+  const PUBLISHERS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [publishers, setPublishers] = useState([]);
+
+  const { execute: fetchPublishers } = useApi(apiService.getPublishers);
+
+  useEffect(() => {
+    const loadPublishers = async () => {
+      try {
+        const data = await fetchPublishers();
+        setPublishers(data);
+      } catch (err) {
+        console.error('Error al cargar las editoriales:', err);
+      }
+    };
+
+    loadPublishers();
+  }, [fetchPublishers]);
+
+  // Calcular editoriales a mostrar según la página
+  const paginatedPublishers = publishers.slice((currentPage - 1) * PUBLISHERS_PER_PAGE, currentPage * PUBLISHERS_PER_PAGE);
+  const totalPages = Math.ceil(publishers.length / PUBLISHERS_PER_PAGE);
+
   return (
     <Routes>
-      <Route index element={<PublisherList />} />
+      <Route index element={
+        <div>
+          <div className="mb-6 flex items-center">
+            <Button 
+              variant="outline" 
+              className="mr-4"
+              onClick={() => navigate('/publishers')}
+            >
+              <HiArrowLeft className="w-5 h-5 mr-2" />
+              Volver
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-900">Lista de Editoriales</h1>
+          </div>
+          {Array.isArray(publishers) && paginatedPublishers.length > 0 ? (
+            <PublisherList publishers={paginatedPublishers} />
+          ) : (
+            <p>No se encontraron editoriales.</p>
+          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      } />
       <Route path="new" element={<NewPublisher />} />
       <Route path=":id/edit" element={<EditPublisher />} />
     </Routes>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiPencil, 
@@ -14,17 +14,9 @@ import useApi from '../../hooks/useApi';
 import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
-const AuthorList = () => {
-  const [authors, setAuthors] = useState([]);
+const AuthorList = ({ authors = [] }) => {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, author: null });
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const {
-    loading: loadingAuthors,
-    error: authorsError,
-    execute: fetchAuthors
-  } = useApi(apiService.getAuthors);
-  
+
   const {
     loading: loadingDelete,
     execute: executeDelete
@@ -40,68 +32,28 @@ const AuthorList = () => {
     showSuccessToast: true
   });
 
-  useEffect(() => {
-    loadAuthors();
-  }, []);
-
-  const loadAuthors = async () => {
-    try {
-      setIsLoading(true);
-      const result = await fetchAuthors();
-      setAuthors(Array.isArray(result) ? result : []);
-    } catch (err) {
-      console.error('Error loading authors:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleToggleState = async (id) => {
     try {
       await executeToggle(id);
-      // Actualizar la lista después de cambiar el estado
-      loadAuthors();
+      // La actualización de la lista debe ser responsabilidad del padre
     } catch (err) {
       console.error('Error toggling author state:', err);
     }
   };
 
-  const openDeleteModal = (author) => {
-    setDeleteModal({ isOpen: true, author });
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModal({ isOpen: false, author: null });
-  };
+  const openDeleteModal = (author) => setDeleteModal({ isOpen: true, author });
+  const closeDeleteModal = () => setDeleteModal({ isOpen: false, author: null });
 
   const handleDelete = async () => {
     if (!deleteModal.author) return;
-    
     try {
       await executeDelete(deleteModal.author.id);
-      // Actualizar la lista después de eliminar
-      loadAuthors();
       closeDeleteModal();
+      // La actualización de la lista debe ser responsabilidad del padre
     } catch (err) {
       console.error('Error deleting author:', err);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  if (authorsError) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        Error cargando autores: {authorsError}
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -141,17 +93,9 @@ const AuthorList = () => {
               ) : (
                 authors.map((author) => (
                   <tr key={author.id ? `author-${author.id}` : `author-temp-${author.name}`} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {author.name}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{author.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        author.state === 1 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {author.state === 1 ? 'Activo' : 'Inactivo'}
-                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${author.state === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{author.state === 1 ? 'Activo' : 'Inactivo'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       {author.id && (
@@ -159,7 +103,6 @@ const AuthorList = () => {
                           <HiPencil className="w-5 h-5" />
                         </Link>
                       )}
-                      
                       <button
                         className={`${author.state === 1 ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} inline-flex items-center`}
                         onClick={() => handleToggleState(author.id)}
@@ -167,7 +110,6 @@ const AuthorList = () => {
                       >
                         {author.state === 1 ? <HiX className="w-5 h-5" /> : <HiCheck className="w-5 h-5" />}
                       </button>
-                      
                       <button 
                         className="text-red-600 hover:text-red-900 inline-flex items-center"
                         onClick={() => openDeleteModal(author)}
@@ -182,7 +124,6 @@ const AuthorList = () => {
           </table>
         </div>
       </div>
-
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModal.isOpen}
